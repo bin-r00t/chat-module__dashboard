@@ -1,4 +1,4 @@
 # Install
 
-yarn 
+yarn   
 yarn dev
