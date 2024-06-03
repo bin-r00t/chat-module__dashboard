@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>用户端</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div class="app bg-gray-100 h-screen flex flex-col gap-5 p-8">
+      <button
+        id="connect"
+        class="connect border p-3 px-5 rounded-lg shadow bg-gray-700 text-white"
+      >
+        connect
+      </button>
+      <div class="form-area flex gap-5 items-center">
+        <input
+          type="text"
+          class="message border p-3 outline-onne"
+          placeholder="message"
+        />
+        <button
+          class="send border p-3 px-5 rounded bg-blue-600 text-white"
+          id="send"
+        >
+          send
+        </button>
+        <div class="bg-white flex-1 p-2 px-6 text-sm flex flex-col gap-1">
+          <div>当前用户：<span id="user" class="font-bold"></span></div>
+          <div>
+            socketId:
+            <span id="socketId" class="font-bold"></span>
+          </div>
+          <div>
+            房间号:
+            <span id="roomId" class="font-bold"></span>
+          </div>
+        </div>
+      </div>
+      <div
+        id="messages"
+        class="messages overflow-y-auto bg-gray-200 flex-1"
+      ></div>
+    </div>
+
+    <script>
+      // let mapTokenToUsername = {
+      //   abc: "中国农业银行",
+      //   cnbm: "中建材集团",
+      // };
+
+      let socket;
+
+      // TOOD: delete
+      const token =
+        location.search
+          .split("&")
+          .find((item) => item.includes("token"))
+          .split("=")[1] || Math.random();
+      const username =
+        location.search
+          .split("&")
+          .find((item) => item.includes("name"))
+          .split("=")[1] || "user";
+      // end
+      function handleConnect(token) {
+        socket = io(`http://localhost:3000`, {
+          auth: {
+            token,
+            // TODO: delete
+            name: new URLSearchParams(location.search).get("name") || "user",
+          },
+        });
+        socket.on("connect", () => {
+          console.log("connected");
+          document.getElementById("user").innerText = decodeURI(username);
+          // document.getElementById("user").innerText = mapTokenToUsername[token];
+          document.getElementById("socketId").innerText = socket.id;
+        });
+        socket.on("room:id", (roomId) => {
+          document.getElementById("roomId").innerText = roomId;
+        });
+        socket.on("waiting:for:admin", (data) => {
+          console.log("[Server] waiting:for:admin", data);
+        });
+      }
+
+      let connected = false;
+      document.getElementById("connect").addEventListener("click", function () {
+        this.classList.toggle("bg-gray-700");
+        this.classList.toggle("bg-red-500");
+        this.innerText = "connect";
+
+        if (connected) {
+          connected = false;
+          socket.disconnect();
+          this.innerText = "connect";
+        } else {
+          connect;
+          handleConnect(token);
+          connected = true;
+          this.innerText = "disconnect";
+        }
+      });
+    </script>
+  </body>
+</html>
